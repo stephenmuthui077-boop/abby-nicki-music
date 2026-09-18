@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abby's Nicki Music Studio 🎤</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #10000d;
+            color: white;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 15px;
+            background: linear-gradient(135deg, #ff1493, #8b005c);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 34px;
+        }
+
+        header p {
+            margin-bottom: 0;
+        }
+
+        .studio {
+            width: 90%;
+            max-width: 650px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: #210016;
+            border: 1px solid #ff1493;
+            border-radius: 22px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.25);
+        }
+
+        h2 {
+            color: #ff69b4;
+        }
+
+        button {
+            border: none;
+            border-radius: 30px;
+            padding: 13px 20px;
+            margin: 6px;
+            background: #ff1493;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ff69b4;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .recording {
+            text-align: center;
+        }
+
+        #status {
+            margin: 15px;
+            color: #ff69b4;
+            font-weight: bold;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .beat-box {
+            text-align: center;
+            padding: 20px;
+            border: 1px dashed #ff69b4;
+            border-radius: 15px;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+            max-width: 100%;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🎤 Abby's Nicki Music Studio 🎵</h1>
+    <p>Record your voice. Create your vibe. ❤️</p>
+</header>
+
+<div class="studio">
+
+    <!-- VOICE RECORDER -->
+    <div class="card recording">
+
+        <h2>🎙️ Voice Recording</h2>
+
+        <p>Record your own song or rap.</p>
+
+        <button id="startBtn" onclick="startRecording()">
+            🔴 Start Recording
+        </button>
+
+        <button id="stopBtn" onclick="stopRecording()" disabled>
+            ⏹️ Stop
+        </button>
+
+        <p id="status">Ready to record 🎶</p>
+
+        <audio id="recordedAudio" controls></audio>
+
+        <br>
+
+        <button id="downloadBtn" onclick="downloadRecording()" disabled>
+            ⬇️ Save Recording
+        </button>
+
+    </div>
+
+
+    <!-- BEAT SECTION -->
+    <div class="card">
+
+        <h2>🥁 Your Beat</h2>
+
+        <div class="beat-box">
+
+            <p>Choose an instrumental beat from your computer.</p>
+
+            <input
+                type="file"
+                id="beatFile"
+                accept="audio/*"
+            >
+
+            <audio id="beatPlayer" controls></audio>
+
+        </div>
+
+    </div>
+
+
+    <!-- FUTURE STUDIO -->
+    <div class="card">
+
+        <h2>🎚️ Music Studio</h2>
+
+        <p>
+            🎤 Vocals: Ready
+        </p>
+
+        <p>
+            🥁 Beat: Choose a beat above
+        </p>
+
+        <p>
+            🎧 Mixing: Coming next
+        </p>
+
+    </div>
+
+</div>
+
+<footer>
+    Made for Abby ❤️🎵
+</footer>
+
+
+<script>
+
+let mediaRecorder;
+let audioChunks = [];
+let recordingBlob;
+
+
+/* START RECORDING */
+
+async function startRecording() {
+
+    try {
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        audioChunks = [];
+
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = function(event) {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = function() {
+
+            recordingBlob = new Blob(audioChunks, {
+                type: "audio/webm"
+            });
+
+            const audioURL = URL.createObjectURL(recordingBlob);
+
+            document.getElementById("recordedAudio").src = audioURL;
+
+            document.getElementById("downloadBtn").disabled = false;
+
+        };
+
+        mediaRecorder.start();
+
+        document.getElementById("status").innerHTML =
+            "🔴 Recording... Speak or sing now! 🎤";
+
+        document.getElementById("startBtn").disabled = true;
+
+        document.getElementById("stopBtn").disabled = false;
+
+    } catch (error) {
+
+        document.getElementById("status").innerHTML =
+            "⚠️ Microphone permission is required.";
+
+        console.log(error);
+
+    }
+
+}
+
+
+/* STOP RECORDING */
+
+function stopRecording() {
+
+    if (mediaRecorder) {
+
+        mediaRecorder.stop();
+
+        mediaRecorder.stream.getTracks().forEach(track => {
+            track.stop();
+        });
+
+        document.getElementById("status").innerHTML =
+            "✅ Recording finished! Listen below 🎧";
+
+        document.getElementById("startBtn").disabled = false;
+
+        document.getElementById("stopBtn").disabled = true;
+
+    }
+
+}
+
+
+/* DOWNLOAD RECORDING */
+
+function downloadRecording() {
+
+    if (!recordingBlob) {
+        return;
+    }
+
+    const url = URL.createObjectURL(recordingBlob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "Abby-Recording.webm";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* LOAD BEAT */
+
+document.getElementById("beatFile").addEventListener("change", function() {
+
+    const file = this.files[0];
+
+    if (file) {
+
+        const beatURL = URL.createObjectURL(file);
+
+        document.getElementById("beatPlayer").src = beatURL;
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
+           
